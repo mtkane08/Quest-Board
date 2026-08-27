@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Design tokens (Section 36: "component design system with theme tokens").
+ * `data-tone="plain"` on <html> switches to the minimal/plain-language
+ * presentation (Section 28) without touching any component markup — only
+ * these variables change. Also respects `prefers-reduced-motion` and
+ * `prefers-contrast` per the WCAG 2.2 AA target (Section 27).
+ */
+:root {
+  --qb-color-bg: #14110f;
+  --qb-color-surface: #211c18;
+  --qb-color-text: #f3ece2;
+  --qb-color-muted: #b6a894;
+  --qb-color-accent: #c98a3f;
+  --qb-color-accent-contrast: #14110f;
+  --qb-color-border: #3a3128;
+  --qb-color-danger: #d1495b;
+  --qb-color-warning: #e0a52c;
+  --qb-color-success: #4c9a6a;
+  --qb-font-display: 'Georgia', 'Iowan Old Style', serif;
+  --qb-font-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+:root[data-tone='plain'] {
+  --qb-color-bg: #ffffff;
+  --qb-color-surface: #f5f5f5;
+  --qb-color-text: #1a1a1a;
+  --qb-color-muted: #5f5f5f;
+  --qb-color-accent: #1d4ed8;
+  --qb-color-accent-contrast: #ffffff;
+  --qb-color-border: #d4d4d4;
+  --qb-font-display: var(--qb-font-body);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+body {
+  background-color: var(--qb-color-bg);
+  color: var(--qb-color-text);
+  font-family: var(--qb-font-body);
+}
+
+.focus-ring:focus-visible {
+  outline: 2px solid var(--qb-color-accent);
+  outline-offset: 2px;
+}
