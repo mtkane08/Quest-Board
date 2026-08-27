@@ -52,7 +52,9 @@ export default async function DiscoverPage({ searchParams }: { searchParams: Pro
     guild: resolvedSearchParams.guild || undefined,
     tier: resolvedSearchParams.tier || undefined,
     maxDurationMinutes: resolvedSearchParams.maxDurationMinutes ? Number(resolvedSearchParams.maxDurationMinutes) : undefined,
-    wheelchairAccessible: resolvedSearchParams.wheelchairAccessible === 'true',
+    // Must be undefined (not `false`) when unchecked, or toQueryString sends
+    // a literal "false" string the API would otherwise need to parse correctly.
+    wheelchairAccessible: resolvedSearchParams.wheelchairAccessible === 'true' || undefined,
   });
 
   return (

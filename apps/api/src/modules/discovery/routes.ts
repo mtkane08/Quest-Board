@@ -24,7 +24,7 @@ async function resolveIncludeAdultContent(pool: Pool, req: Request): Promise<boo
   return isAdultContentEligible(dob, new Date().toISOString());
 }
 
-const discoveryQuerySchema = z.object({
+export const discoveryQuerySchema = z.object({
   lat: z.coerce.number().min(-90).max(90).optional(),
   lng: z.coerce.number().min(-180).max(180).optional(),
   radiusMeters: z.coerce.number().positive().max(200_000).optional(),
@@ -32,7 +32,15 @@ const discoveryQuerySchema = z.object({
   tag: z.string().optional(),
   maxDurationMinutes: z.coerce.number().positive().optional(),
   maxCostCents: z.coerce.number().nonnegative().optional(),
-  wheelchairAccessible: z.coerce.boolean().optional(),
+  // z.coerce.boolean() would turn the literal string "false" into `true`
+  // (JS Boolean("false") is truthy) — a real bug this schema had until a
+  // client sending ?wheelchairAccessible=false (rather than omitting the
+  // param) silently filtered out every quest without confirmed/reported
+  // wheelchair access. Parse the string explicitly instead.
+  wheelchairAccessible: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((v) => v === 'true'),
   tier: z.enum(['novice', 'adventurer', 'heroic', 'legendary', 'mythic']).optional(),
   cursor: z.string().optional(),
   limit: z.coerce.number().positive().max(50).optional(),

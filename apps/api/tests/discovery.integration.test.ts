@@ -69,6 +69,24 @@ describe.skipIf(!dbReachable)('discovery + quest-catalog routes (integration, re
     }
   });
 
+  it('an explicit ?wheelchairAccessible=false does not apply the accessible-only filter', async () => {
+    // Regression test: z.coerce.boolean() treats the string "false" as
+    // truthy (JS Boolean("false") is true), which silently filtered out
+    // every quest without confirmed/reported wheelchair access whenever a
+    // caller sent the literal string "false" instead of omitting the
+    // param — exactly what the web client's discover page did for every
+    // unfiltered request. Found via a live deploy where /discover showed
+    // only 2 of 5 eligible seeded quests.
+    const [withFalse, withoutParam] = await Promise.all([
+      request(ctx.app).get('/api/v1/discovery/list').query({ limit: 50, wheelchairAccessible: 'false' }),
+      request(ctx.app).get('/api/v1/discovery/list').query({ limit: 50 }),
+    ]);
+    expect(withFalse.status).toBe(200);
+    const titles = withFalse.body.results.map((r: { title: string }) => r.title);
+    expect(titles).toContain("Trace the Freedom Trail's Hidden Corners"); // wheelchair: 'partially'
+    expect(titles.length).toBe(withoutParam.body.results.length);
+  });
+
   it('geocode reports degraded rather than erroring when no provider key is configured', async () => {
     const res = await request(ctx.app).get('/api/v1/discovery/geocode').query({ query: 'Boston, MA' });
     expect(res.status).toBe(200);
