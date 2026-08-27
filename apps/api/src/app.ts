@@ -6,6 +6,7 @@ import session from 'express-session';
 import helmet from 'helmet';
 import type { Redis } from 'ioredis';
 import type { Pool } from 'pg';
+import { buildSessionCookieOptions } from './config/cookieOptions.js';
 import type { Env } from './config/env.js';
 import { AppError } from './lib/errors.js';
 import { createFeatureFlagService } from './lib/featureFlags.js';
@@ -61,13 +62,7 @@ export function createApp(deps: AppDependencies): Express {
       secret: env.SESSION_SECRET,
       resave: false,
       saveUninitialized: false,
-      cookie: {
-        httpOnly: true,
-        secure: env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        domain: env.NODE_ENV === 'production' ? env.COOKIE_DOMAIN : undefined,
-        maxAge: 1000 * 60 * 60 * 24 * 14,
-      },
+      cookie: buildSessionCookieOptions(env),
     }),
   );
   app.use(generalRateLimit);

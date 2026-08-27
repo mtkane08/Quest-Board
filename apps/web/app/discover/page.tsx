@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { DiscoveryFilters } from '@/components/DiscoveryFilters';
 import { QuestCard } from '@/components/QuestCard';
 import { getDiscoveryList, isApiError } from '@/lib/api';
@@ -41,16 +42,17 @@ async function resolveLocation(
 // This page's job is the "accessible list parity" requirement itself
 // (Section 8/45): it is the list view, and it is what any future map view
 // must match filter-for-filter — see docs/gate-1/10-wireflows-and-screens.md.
-export default async function DiscoverPage({ searchParams }: { searchParams: SearchParams }) {
-  const location = await resolveLocation(searchParams);
+export default async function DiscoverPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const resolvedSearchParams = await searchParams;
+  const location = await resolveLocation(resolvedSearchParams);
 
   const result = await getDiscoveryList({
     lat: location.lat,
     lng: location.lng,
-    guild: searchParams.guild || undefined,
-    tier: searchParams.tier || undefined,
-    maxDurationMinutes: searchParams.maxDurationMinutes ? Number(searchParams.maxDurationMinutes) : undefined,
-    wheelchairAccessible: searchParams.wheelchairAccessible === 'true',
+    guild: resolvedSearchParams.guild || undefined,
+    tier: resolvedSearchParams.tier || undefined,
+    maxDurationMinutes: resolvedSearchParams.maxDurationMinutes ? Number(resolvedSearchParams.maxDurationMinutes) : undefined,
+    wheelchairAccessible: resolvedSearchParams.wheelchairAccessible === 'true',
   });
 
   return (
@@ -63,7 +65,9 @@ export default async function DiscoverPage({ searchParams }: { searchParams: Sea
       </p>
 
       <div className="mt-6">
-        <DiscoveryFilters />
+        <Suspense fallback={<div className="h-24 rounded-lg border border-border bg-surface" aria-hidden />}>
+          <DiscoveryFilters />
+        </Suspense>
       </div>
 
       {location.degradedMessage ? (

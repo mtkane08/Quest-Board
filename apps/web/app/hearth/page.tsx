@@ -28,6 +28,8 @@ export default function HearthPage() {
   }
 
   useEffect(() => {
+    // Standard fetch-on-mount — see the same note in app/attempts/[id]/page.tsx.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
   }, []);
 

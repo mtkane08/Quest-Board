@@ -1,10 +1,12 @@
+import { ensureUrlScheme } from './normalizeUrl';
+
 /**
  * Server-side API base URL. The web app is a BFF client (Section 36) — it
  * calls the API server-to-server during rendering here, and will proxy
  * browser-originated calls through its own routes once auth/session
  * wiring between the two apps is built out past Gate 2.
  */
-const API_BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:3001';
+const API_BASE_URL = ensureUrlScheme(process.env.API_BASE_URL ?? 'http://localhost:3001');
 
 export interface HealthResponse {
   status: 'ok' | 'error';

@@ -5,6 +5,24 @@ gate in the spec's own implementation plan** (Section 47 defines Gates 0-7
 only) — see `01-mvp-done-checklist.md` alongside this report for the honest
 answer to "is it done," which is more nuanced than a single yes/no.
 
+> **Update (post-report):** the Next.js security finding described below as
+> "unresolved" has since been fixed — `next` was upgraded 14.2.35 →
+> 16.3.3 (a real major-version migration, not a patch bump) as a
+> prerequisite for public deployment. `npm audit --omit=dev` now reports
+> zero vulnerabilities across the whole monorepo. This required: migrating
+> `apps/web`'s ESLint config from `.eslintrc.json` to a native flat
+> `eslint.config.mjs` (Next 16 dropped the `next lint` CLI and requires
+> ESLint 9); updating three page components for the `params`/`searchParams`
+> Promise change (`app/discover`, `app/quests/[id]`, and switching
+> `app/attempts/[id]` to `useParams()` since a Client Component page can't
+> `await` a Promise prop); wrapping `<DiscoveryFilters />` in `<Suspense>`
+> (Next 16 enforces this for `useSearchParams()`); and addressing 3 new
+> `react-hooks/set-state-in-effect` findings from an upgraded
+> `eslint-plugin-react-hooks` — each is the standard, correct
+> fetch-on-mount/read-from-localStorage-post-mount pattern, so each got an
+> explained inline suppression rather than a speculative rewrite. Full
+> typecheck/lint/build/test suite reconfirmed green after the migration.
+
 ## Requirements completed
 
 Gate 7's scope per Section 47 is opt-in fog sessions, regional progress,
@@ -18,8 +36,8 @@ evaluation suites, backups/restoration, and pilot readiness.
 | Offline quest packets | Done — server-side packet endpoint + client-side save/view/remove, no service worker (see limitations) | `modules/offline/`, `apps/web/lib/offlinePackets.ts`, `apps/web/app/offline/` |
 | Idempotency-Key enforcement | Done — closes an ADR-011 gap that had existed since Gate 2 | `apps/api/src/middleware/idempotency.ts` |
 | Performance remediation | **Not attempted** — see limitations; no load testing infrastructure exists and no live server was ever run to profile | — |
-| Security remediation | Partial — AI endpoint rate-limited tighter than general API traffic; dependency scan added to CI; one real unresolved finding documented, not hidden | `middleware/rateLimit.ts` `aiRateLimit`, `.github/workflows/ci.yml` |
-| Accessibility remediation | Done (automated layer) — full `jsx-a11y/recommended` ruleset now enforced in lint/CI, passing clean; manual/assistive-tech testing not done (no device available) | `apps/web/.eslintrc.json` |
+| Security remediation | Done — AI endpoint rate-limited tighter than general API traffic; dependency scan added to CI; the one real finding (Next.js) is now fixed, not just documented (see update note above) | `middleware/rateLimit.ts` `aiRateLimit`, `.github/workflows/ci.yml` |
+| Accessibility remediation | Done (automated layer) — full `jsx-a11y/recommended` ruleset now enforced in lint/CI, passing clean; manual/assistive-tech testing not done (no device available) | `apps/web/eslint.config.mjs` |
 | Evaluation suites | Done (harness + versioned cases); not exercised against a real model | `apps/api/tests/ai-eval/cases.json`, `aiEvaluation.test.ts` |
 | Backups/restoration | Scripts written, not executed | `scripts/backup.sh`, `scripts/restore.sh` |
 | Pilot readiness | Documented honestly in `01-mvp-done-checklist.md` | — |
@@ -137,22 +155,22 @@ to seven gates of tested software.
 6. `bash scripts/backup.sh` then `bash scripts/restore.sh backups/<file>` —
    confirm the row-count verification passes and the throwaway database is
    cleaned up afterward.
-7. `npm audit --omit=dev` — confirm you see the same Next.js findings
-   described below, and decide whether/when to take the major-version
-   upgrade.
+7. `npm audit --omit=dev` — confirm it reports zero vulnerabilities across
+   the whole monorepo.
 
-## The one real security finding this gate surfaced
+## The one real security finding this gate surfaced (since fixed)
 
-`npm audit` found `next@14.2.35` (the version installed since Gate 2) has
+`npm audit` found `next@14.2.35` (the version installed since Gate 2) had
 2 high-severity advisory clusters, fixed only in `next@16.3.3` — a major
-version bump. I did not apply it: a major-version upgrade to the one
-framework the entire web app is built on, with no way to run the app and
-confirm nothing broke, is exactly the kind of change that needs a human
-decision and a real test pass, not a same-turn "npm audit fix --force."
-This is now tracked as an open item in `01-mvp-done-checklist.md` rather
-than silently left for someone to discover later. `apps/api`'s dependencies
-have zero known vulnerabilities (`npm audit --omit=dev` in that workspace
-returns clean).
+version bump. At the time this report was first written, I deliberately
+did not apply it: a major-version upgrade to the one framework the entire
+web app is built on, with no way to run the app and confirm nothing broke,
+is exactly the kind of change that needs a human decision and a real test
+pass, not a same-turn "npm audit fix --force." That decision (fix first,
+then deploy) was made explicitly before the upgrade was attempted — see the
+update note at the top of this report for what the migration actually
+involved. `apps/api`'s dependencies had zero known vulnerabilities
+throughout (`npm audit --omit=dev` in that workspace was always clean).
 
 ## Accessibility / security / privacy review
 
@@ -204,7 +222,6 @@ provider is configured (still blocked on DL-008).
 - **No real AI model has ever been evaluated** through the Section 44
   harness — it currently proves the harness and the architecture's
   injection-resistance, not any model's actual factual accuracy.
-- **The Next.js dependency vulnerability is unresolved** — see above.
 - **No analytics events are actually emitted anywhere in the running
   code**, despite Gate 1 having designed a full event dictionary. This
   should have been flagged in an earlier gate's report and wasn't — it's
@@ -216,11 +233,11 @@ provider is configured (still blocked on DL-008).
 ## Deferred work
 
 Load/performance testing, a true service-worker offline architecture,
-real region-name resolution (needs a Places/geocoding provider), the
-Next.js major-version security upgrade (needs a dedicated test pass), a
-real AI provider evaluation run, executed (not just written) backup/
-restore verification, and actual analytics event emission wired into the
-running API.
+real region-name resolution (needs a Places/geocoding provider), a real AI
+provider evaluation run, executed (not just written) backup/restore
+verification, and actual analytics event emission wired into the running
+API. (The Next.js major-version security upgrade, previously listed here,
+is done — see the update note at the top of this report.)
 
 ## This is the last spec-defined gate
 

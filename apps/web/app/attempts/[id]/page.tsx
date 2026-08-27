@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { ApiClientError, apiClient } from '@/lib/apiClient';
 
@@ -9,8 +10,14 @@ import { ApiClientError, apiClient } from '@/lib/apiClient';
  * complete and evidence" screens, combined into one page for Gate 5 — no
  * map/checkpoint navigation UI yet (that needs the multi-stop route work
  * deferred since Gate 3), just objective tracking and the state actions.
+ *
+ * Uses `useParams()` rather than a `params` prop: since Next 15, the page
+ * prop is a Promise (meant for async Server Components), which a
+ * synchronous Client Component page can't `await`. `useParams()` gives the
+ * resolved segment directly.
  */
-export default function AttemptPage({ params }: { params: { id: string } }) {
+export default function AttemptPage() {
+  const params = useParams<{ id: string }>();
   const attemptId = params.id;
   const [attempt, setAttempt] = useState<{ state: string } | null>(null);
   const [objectives, setObjectives] = useState<Array<{ id: string; text: string; completedAt: string | null }>>([]);
@@ -31,6 +38,12 @@ export default function AttemptPage({ params }: { params: { id: string } }) {
   }
 
   useEffect(() => {
+    // Standard fetch-on-mount: `load` sets state after an awaited
+    // request, not synchronously in the effect body. `attemptId` comes
+    // from the URL and doesn't change without a full navigation/remount,
+    // so there's no rapid-refire race for this rule's cancellation
+    // concern to apply to.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attemptId]);

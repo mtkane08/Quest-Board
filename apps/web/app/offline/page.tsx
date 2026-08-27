@@ -13,6 +13,11 @@ export default function OfflinePage() {
   const [selected, setSelected] = useState<StoredPacket | null>(null);
 
   useEffect(() => {
+    // Must run in an effect, not a lazy useState initializer: `listPackets`
+    // reads `localStorage`, which doesn't exist during server rendering —
+    // this is exactly the "synchronize with an external system" case
+    // React's own effect guidance describes as appropriate.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPackets(listPackets());
   }, []);
 

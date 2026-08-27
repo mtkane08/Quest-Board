@@ -86,6 +86,10 @@ export default function ProfilePage() {
     }
     try {
       await apiClient.eraseAccount();
+      // A full reload (not router.push) is deliberate here: account
+      // erasure should leave no client-side React state — progression,
+      // saved quests, cached fetches — lingering in memory afterward.
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
       window.location.href = '/';
     } catch (err) {
       setEraseError(err instanceof ApiClientError ? err.message : 'Could not erase your account.');

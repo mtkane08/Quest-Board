@@ -1,0 +1,86 @@
+# Render Blueprint — first production deployment target for Quest Board.
+# Nothing in Gates 0-7 built any deployment infrastructure; this is new,
+# written to get a real public URL up. It has never been applied (that
+# requires a Render account, which only you can create) — treat this as a
+# strong starting point to import via Render's "New > Blueprint", not a
+# guaranteed one-click deploy. See README.md's Deployment section for the
+# steps and what to verify along the way, especially whether Render's
+# managed Postgres allows `CREATE EXTENSION postgis` on your plan — that's
+# the one real unknown this blueprint can't resolve in advance.
+
+databases:
+  - name: quest-board-postgres
+    databaseName: questboard
+    user: questboard
+    plan: free
+    postgresMajorVersion: '16'
+
+services:
+  - type: redis
+    name: quest-board-redis
+    plan: free
+    ipAllowList: []
+
+  - type: web
+    name: quest-board-api
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm ci && npm run build --workspace=apps/api
+    startCommand: npm run start --workspace=apps/api
+    # Runs `db:migrate`/`db:seed` before each deploy — safe to repeat
+    # (migrations are tracked, seeds are ON CONFLICT DO NOTHING).
+    preDeployCommand: npm run db:migrate && npm run db:seed
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: DATABASE_URL
+        fromDatabase:
+          name: quest-board-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: quest-board-redis
+          type: redis
+          property: connectionString
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: SESSION_COOKIE_NAME
+        value: qb_session
+      - key: WEB_ORIGIN
+        fromService:
+          name: quest-board-web
+          type: web
+          property: host
+      # Both blank: the Places/AI providers run in stub/degraded mode
+      # until the Gate 0 licensing questions are answered and real keys
+      # exist (docs/gate-0/04-provider-licensing-questions.md). Set these
+      # in the Render dashboard, not here, once that review is done.
+      - key: GOOGLE_PLACES_SERVER_API_KEY
+        sync: false
+      - key: AI_PROVIDER_API_KEY
+        sync: false
+
+  - type: web
+    name: quest-board-web
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm ci && npm run build --workspace=apps/web
+    startCommand: npm run start --workspace=apps/web
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: API_BASE_URL
+        fromService:
+          name: quest-board-api
+          type: web
+          property: host
+      - key: NEXT_PUBLIC_API_BASE_URL
+        fromService:
+          name: quest-board-api
+          type: web
+          property: host

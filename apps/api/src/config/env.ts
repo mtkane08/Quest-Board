@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ensureUrlScheme } from './normalizeUrl.js';
 
 /**
  * All configuration enters the app through this schema so a missing/invalid
@@ -16,9 +17,22 @@ const envSchema = z.object({
 
   SESSION_SECRET: z.string().min(16, 'SESSION_SECRET must be at least 16 characters'),
   SESSION_COOKIE_NAME: z.string().default('qb_session'),
-  COOKIE_DOMAIN: z.string().default('localhost'),
+  // No default, and no fallback to 'localhost': a `Domain` attribute only
+  // makes sense when the API and web app share a parent domain (e.g. both
+  // under yourapp.com). On a topology like Render's, where each service
+  // gets its own unrelated *.onrender.com subdomain, setting any `Domain`
+  // value would either not match the API's real host (silently dropping
+  // the cookie) or scope it wider than intended — so this stays unset
+  // (host-only cookie) unless a real shared parent domain exists.
+  COOKIE_DOMAIN: z.string().optional(),
 
-  WEB_ORIGIN: z.string().url().default('http://localhost:3000'),
+  // The default already carries an explicit scheme (local dev); a bare
+  // hostname only reaches the fallback branch in a real deployment, where
+  // Render (and any sane host) always serves over HTTPS.
+  WEB_ORIGIN: z
+    .string()
+    .default('http://localhost:3000')
+    .transform((v) => ensureUrlScheme(v, 'https')),
 
   // Provider credentials are optional at Gate 2 — the adapters run in
   // stub/degraded mode when absent (ADR-005, ADR-006). Do not require them

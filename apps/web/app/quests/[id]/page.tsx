@@ -21,8 +21,9 @@ const ACCESSIBILITY_LABEL: Record<string, string> = {
  * requires *these specific fields* be spoiler-free, not that every detail
  * must be hidden.
  */
-export default async function QuestDetailPage({ params }: { params: { id: string } }) {
-  const result = await getQuest(params.id);
+export default async function QuestDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const result = await getQuest(id);
 
   if (isApiError(result)) {
     return (

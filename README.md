@@ -16,9 +16,11 @@ an AI evaluation harness, and backup/restore scripts. **This does not mean
 the product is a finished, shippable MVP** — see
 [`docs/gate-7/01-mvp-done-checklist.md`](docs/gate-7/01-mvp-done-checklist.md)
 for an unflinching, evidence-based answer against the spec's own Section 49
-exit criteria, including one real unresolved security finding and the fact
-that no part of this application has ever been run against a live browser
-in the environment it was built in. The milestone report is
+exit criteria. Since that report was written, `next` was upgraded 14→16 to
+close the one real dependency vulnerability it found (`npm audit` is now
+clean), and cross-site cookie handling was fixed for real deployment — see
+[`docs/deployment.md`](docs/deployment.md) for deploying this to Render.
+The milestone report is
 [`docs/gate-7/00-hardening-report.md`](docs/gate-7/00-hardening-report.md).
 Earlier reports:
 [Gate 2](docs/gate-2/00-foundation-report.md),
@@ -47,6 +49,13 @@ demo. Requires Docker Desktop for local Postgres+PostGIS/Redis — **this
 Quickstart has never actually been run in the environment this project was
 built in** (no Docker, no browser) — see every gate report's "Known
 limitations" and, especially, `docs/gate-7/01-mvp-done-checklist.md`.
+
+## Deployment
+
+See [`docs/deployment.md`](docs/deployment.md) and `render.yaml` at the
+repo root for deploying this to Render — also never actually applied (needs
+a Render account only you can create), same honesty as everything else
+here.
 
 ### Gate 0 — Requirements Audit
 

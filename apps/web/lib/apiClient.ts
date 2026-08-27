@@ -1,14 +1,19 @@
 'use client';
 
+import { ensureUrlScheme } from './normalizeUrl';
+
 /**
  * Browser-side API client. Unlike lib/api.ts (server-to-server, used for
  * discovery reads), auth/Forge calls need the user's session cookie, so
  * these run client-side with `credentials: 'include'` against the API
- * origin directly — localhost:3000 and localhost:3001 are same-site
- * (same registrable domain, different port), so the `SameSite=Lax` session
- * cookie from apps/api's `express-session` config is sent correctly.
+ * origin directly. In local dev, localhost:3000 and localhost:3001 are
+ * same-site (same registrable domain, different port), so the API's
+ * `SameSite=Lax` session cookie is sent correctly. In a real deployment
+ * where the web app and API sit on unrelated subdomains, the API switches
+ * that cookie to `SameSite=None; Secure` instead — see
+ * apps/api/src/config/cookieOptions.ts.
  */
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3001';
+const API_BASE_URL = ensureUrlScheme(process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3001');
 
 export class ApiClientError extends Error {
   constructor(
