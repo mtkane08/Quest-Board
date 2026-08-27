@@ -54,11 +54,14 @@ services:
         generateValue: true
       - key: SESSION_COOKIE_NAME
         value: qb_session
+      # fromService's `host` property resolves to the bare internal
+      # service name (e.g. "quest-board-web"), not the public hostname —
+      # useless for CORS checks against real browser Origin headers, which
+      # always carry the full https://*.onrender.com URL. Hardcoded here
+      # since Render's public hostname is deterministic; update if either
+      # service is ever renamed or given a custom domain.
       - key: WEB_ORIGIN
-        fromService:
-          name: quest-board-web
-          type: web
-          property: host
+        value: https://quest-board-web.onrender.com
       # Both blank: the Places/AI providers run in stub/degraded mode
       # until the Gate 0 licensing questions are answered and real keys
       # exist (docs/gate-0/04-provider-licensing-questions.md). Set these
@@ -80,13 +83,10 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      # Same fromService/host caveat as WEB_ORIGIN above — the browser
+      # (which NEXT_PUBLIC_API_BASE_URL is for) can't reach Render's
+      # internal network at all, so both must be the public hostname.
       - key: API_BASE_URL
-        fromService:
-          name: quest-board-api
-          type: web
-          property: host
+        value: https://quest-board-api.onrender.com
       - key: NEXT_PUBLIC_API_BASE_URL
-        fromService:
-          name: quest-board-api
-          type: web
-          property: host
+        value: https://quest-board-api.onrender.com
