@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import { DiscoveryFilters } from '@/components/DiscoveryFilters';
+import { MapView } from '@/components/MapView';
 import { QuestCard } from '@/components/QuestCard';
 import { getDiscoveryList, isApiError } from '@/lib/api';
 
@@ -57,14 +58,34 @@ export default async function DiscoverPage({ searchParams }: { searchParams: Pro
     wheelchairAccessible: resolvedSearchParams.wheelchairAccessible === 'true' || undefined,
   });
 
+  const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_API_KEY;
+  const pins = !isApiError(result)
+    ? result.results
+        .filter((quest) => quest.primaryLocation !== null)
+        .map((quest) => ({
+          questId: quest.questId,
+          title: quest.title,
+          overallTier: quest.overallTier,
+          lat: quest.primaryLocation!.lat,
+          lng: quest.primaryLocation!.lng,
+        }))
+    : [];
+
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
       <h1 className="font-display text-3xl text-accent">The Realm</h1>
-      <p className="mt-1 text-sm text-muted">
-        Map view isn&apos;t wired up yet — no Google Maps browser key is configured in this
-        environment, so this is the accessible list, which is functionally complete on its own
-        (Section 8: every map result must also be available as a list).
-      </p>
+
+      {mapsApiKey ? (
+        <div className="mt-4">
+          <MapView pins={pins} apiKey={mapsApiKey} />
+        </div>
+      ) : (
+        <p className="mt-1 text-sm text-muted">
+          Map view isn&apos;t wired up yet — no Google Maps browser key is configured in this
+          environment, so this is the accessible list, which is functionally complete on its own
+          (Section 8: every map result must also be available as a list).
+        </p>
+      )}
 
       <div className="mt-6">
         <Suspense fallback={<div className="h-24 rounded-lg border border-border bg-surface" aria-hidden />}>

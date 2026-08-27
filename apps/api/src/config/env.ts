@@ -38,7 +38,6 @@ const envSchema = z.object({
   // stub/degraded mode when absent (ADR-005, ADR-006). Do not require them
   // to boot the Foundation vertical slice.
   GOOGLE_PLACES_SERVER_API_KEY: z.string().optional(),
-  GOOGLE_MAPS_BROWSER_API_KEY: z.string().optional(),
   AI_PROVIDER_API_KEY: z.string().optional(),
   AI_PROVIDER_NAME: z.string().optional(),
 });

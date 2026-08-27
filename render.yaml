@@ -90,3 +90,12 @@ services:
         value: https://quest-board-api.onrender.com
       - key: NEXT_PUBLIC_API_BASE_URL
         value: https://quest-board-api.onrender.com
+      # Blank until you get your own Google Maps JavaScript API key
+      # (separate from GOOGLE_PLACES_SERVER_API_KEY above — that one's
+      # server-side only). Without it, /discover falls back to the
+      # accessible list only, per Section 8's list-parity requirement.
+      # NEXT_PUBLIC_ vars are baked into the client bundle at *build* time,
+      # not read at runtime — after setting this in Render's dashboard you
+      # need "Manual Deploy" (a real rebuild), not just a restart.
+      - key: NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_API_KEY
+        sync: false
