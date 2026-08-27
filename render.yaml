@@ -27,10 +27,11 @@ services:
     plan: free
     region: oregon
     buildCommand: npm ci && npm run build --workspace=apps/api
-    startCommand: npm run start --workspace=apps/api
-    # Runs `db:migrate`/`db:seed` before each deploy — safe to repeat
-    # (migrations are tracked, seeds are ON CONFLICT DO NOTHING).
-    preDeployCommand: npm run db:migrate && npm run db:seed
+    # preDeployCommand isn't available on free-tier services, so
+    # `db:migrate`/`db:seed` run ahead of the server start instead — safe to
+    # repeat on every deploy (migrations are tracked, seeds are ON CONFLICT
+    # DO NOTHING).
+    startCommand: npm run db:migrate && npm run db:seed && npm run start --workspace=apps/api
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
