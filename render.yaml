@@ -26,7 +26,10 @@ services:
     runtime: node
     plan: free
     region: oregon
-    buildCommand: npm ci && npm run build --workspace=apps/api
+    # NODE_ENV=production below makes npm's default `omit=dev` config kick
+    # in, which would silently skip devDependencies (typescript, @types/*)
+    # that the build needs — --include=dev overrides that for this step only.
+    buildCommand: npm ci --include=dev && npm run build --workspace=apps/api
     # preDeployCommand isn't available on free-tier services, so
     # `db:migrate`/`db:seed` run ahead of the server start instead — safe to
     # repeat on every deploy (migrations are tracked, seeds are ON CONFLICT
@@ -70,7 +73,9 @@ services:
     runtime: node
     plan: free
     region: oregon
-    buildCommand: npm ci && npm run build --workspace=apps/web
+    # Same devDependencies-under-NODE_ENV=production issue as the API
+    # service above — tailwindcss, typescript, eslint, etc. all live there.
+    buildCommand: npm ci --include=dev && npm run build --workspace=apps/web
     startCommand: npm run start --workspace=apps/web
     envVars:
       - key: NODE_ENV
